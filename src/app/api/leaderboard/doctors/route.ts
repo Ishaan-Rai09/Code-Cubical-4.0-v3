@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { connectToDatabase } from '@/lib/mongodb'
+import connectDB from '@/lib/mongodb'
 
 export async function GET(request: NextRequest) {
   try {
@@ -7,7 +7,12 @@ export async function GET(request: NextRequest) {
     const specialization = searchParams.get('specialization')
     const limit = parseInt(searchParams.get('limit') || '10')
 
-    const { db } = await connectToDatabase()
+    const mongoose = await connectDB()
+    const db = mongoose.connection.db
+
+    if (!db) {
+      throw new Error('Database connection failed')
+    }
 
     let query = {}
     if (specialization && specialization !== 'all') {

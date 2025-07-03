@@ -24,7 +24,11 @@ export async function GET(request: NextRequest) {
       patientEmail: booking.patientEmail,
       patientName: booking.patientName,
       doctorSpecialization: booking.doctorSpecialization,
-      doctorName: `Dr. ${booking.doctorSpecialization}`,
+      doctorName: booking.doctorSpecialization === 'heart' ? 'Dr. Cardiologist' :
+                  booking.doctorSpecialization === 'brain' ? 'Dr. Neurologist' :
+                  booking.doctorSpecialization === 'lungs' ? 'Dr. Pulmonologist' :
+                  booking.doctorSpecialization === 'liver' ? 'Dr. Hepatologist' :
+                  `Dr. ${booking.doctorSpecialization}`,
       date: booking.date,
       time: booking.time,
       status: booking.status,
@@ -32,7 +36,9 @@ export async function GET(request: NextRequest) {
       doctorResponse: booking.doctorResponse,
       analysisId: booking.analysisId,
       remarks: booking.remarks,
-      meetingLink: booking.meetingLink
+      meetingLink: booking.meetingLink,
+      created: booking.created,
+      updated: booking.updated
     }))
     
     // Sort by date (newest first)

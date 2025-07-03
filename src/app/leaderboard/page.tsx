@@ -1,22 +1,21 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { 
-  Trophy,
-  Star,
-  Award,
-  Users,
-  TrendingUp,
-  ArrowLeft,
-  Eye,
-  Medal,
-  Crown,
-  Target
-} from 'lucide-react'
 import Link from 'next/link'
+import { 
+  ArrowLeft, 
+  Trophy, 
+  Crown, 
+  Medal, 
+  Star, 
+  Users, 
+  Target, 
+  TrendingUp, 
+  Eye
+} from 'lucide-react'
 import toast from 'react-hot-toast'
 
-interface Doctor {
+interface DoctorLeaderboard {
   _id: string
   doctorName: string
   doctorSpecialization: string
@@ -32,7 +31,7 @@ interface Doctor {
 }
 
 interface LeaderboardData {
-  leaderboard: Doctor[]
+  leaderboard: DoctorLeaderboard[]
   specializations: string[]
   currentFilter: string
 }
@@ -41,11 +40,11 @@ export default function LeaderboardPage() {
   const [data, setData] = useState<LeaderboardData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [filterSpecialization, setFilterSpecialization] = useState<string>('all')
+  const [sortBy, setSortBy] = useState<'rating' | 'reviews' | 'cases'>('rating')
 
   useEffect(() => {
     const fetchLeaderboardData = async () => {
       try {
-        setIsLoading(true)
         const response = await fetch(`/api/leaderboard/doctors?specialization=${filterSpecialization}&limit=20`)
         const result = await response.json()
 
@@ -65,15 +64,11 @@ export default function LeaderboardPage() {
     fetchLeaderboardData()
   }, [filterSpecialization])
 
-  const handleSpecializationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setFilterSpecialization(e.target.value)
-  }
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-luxury-gold border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading leaderboard...</p>
         </div>
       </div>
@@ -81,7 +76,23 @@ export default function LeaderboardPage() {
   }
 
   const doctors = data?.leaderboard || []
-  const specializations = data?.specializations || []
+  const specializations = ['all', ...(data?.specializations || [])]
+  
+  // Sort and filter doctors
+  const filteredAndSortedDoctors = doctors
+    .filter(doctor => filterSpecialization === 'all' || doctor.doctorSpecialization === filterSpecialization)
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'rating':
+          return b.averageRating - a.averageRating
+        case 'reviews':
+          return b.totalReviews - a.totalReviews
+        case 'cases':
+          return (b.totalReviews || 0) - (a.totalReviews || 0) // Using reviews as proxy for cases
+        default:
+          return b.averageRating - a.averageRating
+      }
+    })
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -177,7 +188,7 @@ export default function LeaderboardPage() {
           </div>
           <div className="bg-white rounded-lg shadow-lg p-6 text-center">
             <TrendingUp className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-gray-800">{specializations.length}</div>
+            <div className="text-2xl font-bold text-gray-800">{specializations.length - 1}</div>
             <div className="text-gray-600">Specializations</div>
           </div>
         </div>
@@ -213,8 +224,8 @@ export default function LeaderboardPage() {
 
         {/* Leaderboard */}
         <div className="space-y-4">
-          {filteredAndSortedDoctors.map((doctor, index) => (
-            <div key={doctor.id} className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
+          {filteredAndSortedDoctors.map((doctor) => (
+            <div key={doctor._id} className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-6">
                   {/* Rank */}
@@ -225,14 +236,12 @@ export default function LeaderboardPage() {
                   {/* Doctor Info */}
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="text-xl font-bold text-gray-800">{doctor.name}</h3>
-                      {doctor.verifiedDoctor && (
-                        <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                          Verified
-                        </span>
-                      )}
+                      <h3 className="text-xl font-bold text-gray-800">{doctor.doctorName}</h3>
+                      <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                        Verified
+                      </span>
                     </div>
-                    <p className="text-gray-600 mb-2">{doctor.specialization}</p>
+                    <p className="text-gray-600 mb-2">{doctor.doctorSpecialization}</p>
                     <div className="flex items-center space-x-4 text-sm text-gray-600">
                       <div className="flex items-center space-x-1">
                         <div className="flex items-center space-x-1">
@@ -242,19 +251,15 @@ export default function LeaderboardPage() {
                         <span>({doctor.totalReviews} reviews)</span>
                       </div>
                       <span>•</span>
-                      <span>{doctor.totalCases} cases</span>
-                      <span>•</span>
-                      <span>Avg response: {doctor.responseTime}</span>
+                      <span>{doctor.totalReviews} cases</span>
                     </div>
-                    
-                    {/* Achievements */}
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {doctor.achievements.map((achievement, idx) => (
-                        <span key={idx} className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                          {achievement}
-                        </span>
-                      ))}
-                    </div>
+                    {/* Recent Reviews */}
+                    {doctor.recentReviews && doctor.recentReviews.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-xs text-gray-500 mb-1">Recent Review:</p>
+                        <p className="text-sm text-gray-600 italic">"{doctor.recentReviews[0].comment}"</p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -273,24 +278,14 @@ export default function LeaderboardPage() {
           ))}
         </div>
 
+        {/* Empty State */}
         {filteredAndSortedDoctors.length === 0 && (
-          <div className="bg-white rounded-lg shadow-lg p-12 text-center">
+          <div className="text-center py-12">
             <Trophy className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">No Doctors Found</h3>
-            <p className="text-gray-600">No doctors match your current filters.</p>
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">No doctors found</h3>
+            <p className="text-gray-500">Try adjusting your filters or check back later.</p>
           </div>
         )}
-
-        {/* Bottom CTA */}
-        <div className="mt-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-lg p-8 text-white text-center">
-          <h2 className="text-2xl font-bold mb-4">Are you a medical professional?</h2>
-          <p className="text-blue-100 mb-6">Join our platform and help patients get the best AI-assisted medical analysis</p>
-          <Link href="/doctor-login">
-            <button className="px-8 py-3 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition-colors font-semibold">
-              Join as a Doctor
-            </button>
-          </Link>
-        </div>
       </div>
     </div>
   )

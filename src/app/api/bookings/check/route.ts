@@ -62,9 +62,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { bookingId, action, doctorNotes } = body
+    const { bookingId, action, doctorNotes, doctorSpecialization } = body
     
-    console.log('[BOOKING_ACTION] Processing booking action:', { bookingId, action })
+    console.log('[BOOKING_ACTION] Processing booking action:', { bookingId, action, doctorSpecialization })
     
     if (!bookingId || !action) {
       return NextResponse.json(

@@ -17,8 +17,7 @@ import {
   Save,
   X,
   Loader2,
-  RefreshCw,
-  Eye
+  RefreshCw
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -113,7 +112,7 @@ export default function DoctorCasesPage({ specialization, onTabChange }: DoctorC
       onTabChange('bookings')
       toast.success(`Redirecting to patient bookings for ${patientEmail}`)
     } else {
-      toast.info('Bookings feature is available in the Patient Bookings tab')
+      toast.success('Bookings feature is available in the Patient Bookings tab')
     }
   }
 

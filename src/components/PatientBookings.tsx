@@ -132,28 +132,30 @@ export default function PatientBookings() {
   }
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
-        <div className="mb-4">
-          <h2 className="text-3xl font-bold text-luxury-navy">Your Appointments</h2>
-          <p className="text-gray-600 mt-3">Manage your medical consultations</p>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={fetchBookings}
-            disabled={isRefreshing}
-            className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            <span>Refresh</span>
-          </button>
-          <Link href="/dashboard/user/booking">
-            <button className="flex items-center space-x-2 luxury-button">
-              <Plus className="w-4 h-4" />
-              <span>Book New Appointment</span>
+      <div className="bg-gradient-to-r from-luxury-navy to-luxury-navy/90 rounded-2xl p-8 text-white">
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6">
+          <div>
+            <h2 className="text-3xl lg:text-4xl font-bold mb-2">Your Appointments</h2>
+            <p className="text-luxury-cream/80 text-lg">Manage your medical consultations and track your health journey</p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={fetchBookings}
+              disabled={isRefreshing}
+              className="flex items-center justify-center space-x-2 px-6 py-3 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-300 disabled:opacity-50 border border-white/20"
+            >
+              <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span className="font-medium">Refresh</span>
             </button>
-          </Link>
+            <Link href="/dashboard/user/booking">
+              <button className="flex items-center justify-center space-x-2 px-6 py-3 bg-luxury-gold hover:bg-luxury-gold/90 text-luxury-navy rounded-xl transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                <Plus className="w-5 h-5" />
+                <span>Book New Appointment</span>
+              </button>
+            </Link>
+          </div>
         </div>
       </div>
 

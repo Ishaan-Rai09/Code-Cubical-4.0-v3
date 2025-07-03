@@ -14,7 +14,12 @@ import {
   Brain,
   Heart,
   Wind,
-  Activity
+  Activity,
+  AlertTriangle,
+  CheckCircle,
+  Phone,
+  MapPin,
+  Shield
 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -175,105 +180,164 @@ export default function BookingPage() {
 
         <div className="grid lg:grid-cols-2 gap-12">
           {/* Booking Form */}
-          <div className="bg-white rounded-2xl shadow-xl p-8">
-            <h2 className="text-2xl font-bold text-luxury-navy mb-6">Consultation Details</h2>
+          <div className="bg-white rounded-2xl shadow-xl p-8 border border-luxury-gold/10">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-12 h-12 bg-luxury-gold/10 rounded-xl flex items-center justify-center">
+                <Calendar className="w-6 h-6 text-luxury-gold" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-luxury-navy">Consultation Details</h2>
+                <p className="text-gray-600">Fill in your appointment preferences</p>
+              </div>
+            </div>
             
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Doctor Specialization
+                <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-3">
+                  <Stethoscope className="w-4 h-4 text-luxury-gold" />
+                  <span>Doctor Specialization</span>
                 </label>
-                <select
-                  name="doctorSpecialization"
-                  value={formData.doctorSpecialization}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-luxury-gold focus:border-transparent"
-                  required
-                >
-                  <option value="">Select a specialist</option>
-                  <option value="brain">Neurologist (Brain Specialist)</option>
-                  <option value="heart">Cardiologist (Heart Specialist)</option>
-                  <option value="lungs">Pulmonologist (Lung Specialist)</option>
-                  <option value="liver">Hepatologist (Liver Specialist)</option>
-                </select>
+                <div className="relative">
+                  <select
+                    name="doctorSpecialization"
+                    value={formData.doctorSpecialization}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-luxury-gold focus:border-luxury-gold transition-all duration-200 bg-white appearance-none cursor-pointer"
+                    required
+                  >
+                    <option value="">Choose your specialist</option>
+                    <option value="brain">🧠 Neurologist (Brain Specialist)</option>
+                    <option value="heart">❤️ Cardiologist (Heart Specialist)</option>
+                    <option value="lungs">🫁 Pulmonologist (Lung Specialist)</option>
+                    <option value="liver">🍀 Hepatologist (Liver Specialist)</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-3">
+                    <Calendar className="w-4 h-4 text-luxury-gold" />
+                    <span>Preferred Date</span>
+                  </label>
+                  <input
+                    type="date"
+                    name="preferredDate"
+                    value={formData.preferredDate}
+                    onChange={handleInputChange}
+                    min={minDate}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-luxury-gold focus:border-luxury-gold transition-all duration-200"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-3">
+                    <Clock className="w-4 h-4 text-luxury-gold" />
+                    <span>Preferred Time</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      name="preferredTime"
+                      value={formData.preferredTime}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-luxury-gold focus:border-luxury-gold transition-all duration-200 bg-white appearance-none cursor-pointer"
+                      required
+                    >
+                      <option value="">Select a time</option>
+                      {timeSlots.map(time => (
+                        <option key={time} value={time}>{time}</option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Preferred Date
-                </label>
-                <input
-                  type="date"
-                  name="preferredDate"
-                  value={formData.preferredDate}
-                  onChange={handleInputChange}
-                  min={minDate}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-luxury-gold focus:border-transparent"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Preferred Time
-                </label>
-                <select
-                  name="preferredTime"
-                  value={formData.preferredTime}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-luxury-gold focus:border-transparent"
-                  required
-                >
-                  <option value="">Select a time</option>
-                  {timeSlots.map(time => (
-                    <option key={time} value={time}>{time}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Reason for Consultation
+                <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-3">
+                  <FileText className="w-4 h-4 text-luxury-gold" />
+                  <span>Reason for Consultation</span>
                 </label>
                 <textarea
                   name="reason"
                   value={formData.reason}
                   onChange={handleInputChange}
                   rows={4}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-luxury-gold focus:border-transparent"
-                  placeholder="Please describe the reason for your consultation..."
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-luxury-gold focus:border-luxury-gold transition-all duration-200 resize-none"
+                  placeholder="Please describe your symptoms, concerns, or reason for consultation..."
                   required
                 />
+                <div className="mt-1 text-xs text-gray-500">
+                  Be as detailed as possible to help the doctor prepare for your consultation.
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Related Analysis (Optional)
-                </label>
-                <select
-                  name="analysisId"
-                  value={formData.analysisId}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-luxury-gold focus:border-transparent"
-                >
-                  <option value="">Select a related analysis</option>
-                  {userAnalyses.map(analysis => (
-                    <option key={analysis.id} value={analysis.id}>
-                      {analysis.imageType} - {new Date(analysis.createdAt).toLocaleDateString()}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {userAnalyses.length > 0 && (
+                <div>
+                  <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-3">
+                    <Activity className="w-4 h-4 text-luxury-gold" />
+                    <span>Related Analysis (Optional)</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      name="analysisId"
+                      value={formData.analysisId}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-luxury-gold focus:border-luxury-gold transition-all duration-200 bg-white appearance-none cursor-pointer"
+                    >
+                      <option value="">Select a related analysis</option>
+                      {userAnalyses.map(analysis => (
+                        <option key={analysis.id} value={analysis.id}>
+                          📊 {analysis.imageType} - {new Date(analysis.createdAt).toLocaleDateString()}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="mt-1 text-xs text-gray-500">
+                    Link this consultation to a previous analysis for better context.
+                  </div>
+                </div>
+              )}
+
+              {/* Form Summary */}
+              {formData.doctorSpecialization && formData.preferredDate && formData.preferredTime && (
+                <div className="bg-luxury-gold/5 border border-luxury-gold/20 rounded-xl p-4">
+                  <h4 className="font-semibold text-luxury-navy mb-2 flex items-center space-x-2">
+                    <CheckCircle className="w-4 h-4 text-luxury-gold" />
+                    <span>Booking Summary</span>
+                  </h4>
+                  <div className="text-sm text-gray-700 space-y-1">
+                    <p><span className="font-medium">Specialist:</span> {getSpecializationName(formData.doctorSpecialization)}</p>
+                    <p><span className="font-medium">Date:</span> {new Date(formData.preferredDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    <p><span className="font-medium">Time:</span> {formData.preferredTime}</p>
+                  </div>
+                </div>
+              )}
 
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full luxury-button flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full luxury-button flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed text-lg py-4 font-semibold shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300"
               >
                 {isSubmitting ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Submitting...</span>
+                    <span>Submitting Request...</span>
                   </>
                 ) : (
                   <>
@@ -282,58 +346,96 @@ export default function BookingPage() {
                   </>
                 )}
               </button>
+
+              <div className="text-center text-xs text-gray-500">
+                By submitting this request, you agree to our terms of service and privacy policy.
+              </div>
             </form>
           </div>
 
           {/* Information Panel */}
           <div className="space-y-6">
-            <div className="bg-white rounded-2xl shadow-xl p-8">
-              <h3 className="text-xl font-bold text-luxury-navy mb-4">How it Works</h3>
-              <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <div className="w-8 h-8 bg-luxury-gold rounded-full flex items-center justify-center text-white font-bold text-sm">1</div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Submit Request</h4>
-                    <p className="text-gray-600 text-sm">Fill out the consultation form with your preferred date and time</p>
+            <div className="bg-white rounded-2xl shadow-xl p-8 border border-luxury-gold/10">
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="w-12 h-12 bg-luxury-gold/10 rounded-xl flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-luxury-gold" />
+                </div>
+                <h3 className="text-xl font-bold text-luxury-navy">How it Works</h3>
+              </div>
+              <div className="space-y-6">
+                <div className="flex items-start space-x-4">
+                  <div className="w-10 h-10 bg-gradient-to-r from-luxury-gold to-yellow-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">1</div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 mb-1">Submit Request</h4>
+                    <p className="text-gray-600 text-sm leading-relaxed">Fill out the consultation form with your preferred date, time, and medical concerns</p>
                   </div>
                 </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-8 h-8 bg-luxury-gold rounded-full flex items-center justify-center text-white font-bold text-sm">2</div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Doctor Review</h4>
-                    <p className="text-gray-600 text-sm">Our specialist will review your request and confirm availability</p>
+                <div className="flex items-start space-x-4">
+                  <div className="w-10 h-10 bg-gradient-to-r from-luxury-gold to-yellow-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">2</div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 mb-1">Doctor Review</h4>
+                    <p className="text-gray-600 text-sm leading-relaxed">Our specialist will review your request and confirm availability within 24 hours</p>
                   </div>
                 </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-8 h-8 bg-luxury-gold rounded-full flex items-center justify-center text-white font-bold text-sm">3</div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Confirmation</h4>
-                    <p className="text-gray-600 text-sm">You'll receive a confirmation email with meeting details</p>
+                <div className="flex items-start space-x-4">
+                  <div className="w-10 h-10 bg-gradient-to-r from-luxury-gold to-yellow-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">3</div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 mb-1">Confirmation</h4>
+                    <p className="text-gray-600 text-sm leading-relaxed">You'll receive a confirmation email with secure meeting link and instructions</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-luxury-gold/10 rounded-2xl p-6">
-              <h3 className="text-lg font-bold text-luxury-navy mb-3">Important Notes</h3>
-              <ul className="space-y-2 text-sm text-gray-700">
-                <li className="flex items-start space-x-2">
-                  <div className="w-1.5 h-1.5 bg-luxury-gold rounded-full mt-2"></div>
+            <div className="bg-gradient-to-br from-luxury-navy to-luxury-navy/90 rounded-2xl p-6 text-white">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Shield className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-lg font-bold">Important Notes</h3>
+              </div>
+              <ul className="space-y-3 text-sm text-luxury-cream/90">
+                <li className="flex items-start space-x-3">
+                  <Clock className="w-4 h-4 text-luxury-gold flex-shrink-0 mt-0.5" />
                   <span>Consultations are typically 30-60 minutes long</span>
                 </li>
-                <li className="flex items-start space-x-2">
-                  <div className="w-1.5 h-1.5 bg-luxury-gold rounded-full mt-2"></div>
+                <li className="flex items-start space-x-3">
+                  <FileText className="w-4 h-4 text-luxury-gold flex-shrink-0 mt-0.5" />
                   <span>Please have your analysis results ready for discussion</span>
                 </li>
-                <li className="flex items-start space-x-2">
-                  <div className="w-1.5 h-1.5 bg-luxury-gold rounded-full mt-2"></div>
+                <li className="flex items-start space-x-3">
+                  <Calendar className="w-4 h-4 text-luxury-gold flex-shrink-0 mt-0.5" />
                   <span>You can reschedule up to 24 hours before your appointment</span>
                 </li>
-                <li className="flex items-start space-x-2">
-                  <div className="w-1.5 h-1.5 bg-luxury-gold rounded-full mt-2"></div>
+                <li className="flex items-start space-x-3">
+                  <Shield className="w-4 h-4 text-luxury-gold flex-shrink-0 mt-0.5" />
                   <span>All consultations are conducted via secure video call</span>
                 </li>
               </ul>
+            </div>
+
+            {/* Quick Contact Info */}
+            <div className="bg-luxury-cream/50 rounded-2xl p-6 border border-luxury-gold/20">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-10 h-10 bg-luxury-gold/10 rounded-xl flex items-center justify-center">
+                  <Phone className="w-5 h-5 text-luxury-gold" />
+                </div>
+                <h3 className="text-lg font-bold text-luxury-navy">Need Help?</h3>
+              </div>
+              <div className="space-y-2 text-sm text-gray-700">
+                <div className="flex items-center space-x-2">
+                  <Phone className="w-4 h-4 text-luxury-gold" />
+                  <span>Call us: (555) 123-4567</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Mail className="w-4 h-4 text-luxury-gold" />
+                  <span>Email: support@medicalcenter.com</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <MapPin className="w-4 h-4 text-luxury-gold" />
+                  <span>Available 24/7 for emergencies</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

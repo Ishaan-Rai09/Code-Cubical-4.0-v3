@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { connectToDatabase } from '@/lib/mongodb'
+import connectDB from '@/lib/mongodb'
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,7 +21,12 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    const { db } = await connectToDatabase()
+    const mongoose = await connectDB()
+    const db = mongoose.connection.db
+
+    if (!db) {
+      throw new Error('Database connection failed')
+    }
 
     // Check if review already exists for this booking
     const existingReview = await db.collection('reviews').findOne({ bookingId })

@@ -115,18 +115,70 @@ class GoogleCalendarAPI {
       const events = response.data.items || []
       console.log(`[GOOGLE_CALENDAR] Found ${events.length} total events`)
       
-      // Filter events that are medical consultations and match the doctor specialization
+      // More inclusive filtering to show ALL relevant calendar events
       const filteredEvents = events.filter((event: any) => {
+        // Skip all-day events without times (like holidays)
+        if (!event.start?.dateTime) {
+          return false
+        }
+        
+        // Include events with extended properties for this specialization
         const hasExtendedProps = event.extendedProperties?.private?.doctorSpecialization === doctorSpecialization
+        
+        // Include events with doctor attendee for this specialization
         const hasDoctorAttendee = event.attendees?.some((attendee: any) => 
           attendee.email === `${doctorSpecialization}@luxehealth.ai`
         )
-        const isMedicalConsultation = event.summary?.includes('Medical Consultation')
         
-        return (hasExtendedProps || hasDoctorAttendee) && isMedicalConsultation
+        // Include events that are medical consultations
+        const isMedicalConsultation = event.summary?.toLowerCase().includes('consultation') ||
+                                     event.summary?.toLowerCase().includes('appointment') ||
+                                     event.summary?.toLowerCase().includes('meeting')
+        
+        // Include events that contain medical or health related keywords
+        const isMedicalRelated = event.summary?.toLowerCase().includes('medical') ||
+                                event.summary?.toLowerCase().includes('health') ||
+                                event.summary?.toLowerCase().includes('patient') ||
+                                event.summary?.toLowerCase().includes('doctor') ||
+                                event.summary?.toLowerCase().includes('checkup') ||
+                                event.summary?.toLowerCase().includes('follow-up')
+        
+        // Include events that mention the specialization
+        const mentionsSpecialization = event.summary?.toLowerCase().includes(doctorSpecialization) ||
+                                       event.description?.toLowerCase().includes(doctorSpecialization)
+        
+        // Include events in the doctor's calendar that have attendees (indicating appointments)
+        const hasAttendees = event.attendees && event.attendees.length > 0
+        
+        // Include ANY events that have multiple attendees (likely meetings)
+        const hasMultipleAttendees = event.attendees && event.attendees.length >= 2
+        
+        // Include events with any doctor-like email patterns
+        const hasAnyDoctorEmail = event.attendees?.some((attendee: any) => 
+          attendee.email?.includes('doctor') || 
+          attendee.email?.includes('dr.') ||
+          attendee.email?.includes('@luxehealth.ai') ||
+          attendee.email?.includes('@clinic') ||
+          attendee.email?.includes('@hospital')
+        )
+        
+        // Include if ANY of these conditions are met (very inclusive)
+        return hasExtendedProps || 
+               hasDoctorAttendee || 
+               hasAnyDoctorEmail ||
+               mentionsSpecialization ||
+               (isMedicalConsultation && hasAttendees) ||
+               (isMedicalRelated && hasAttendees) ||
+               hasMultipleAttendees || // Include any multi-person meetings
+               // Include all events with patient-like emails
+               (hasAttendees && event.attendees.some((attendee: any) => 
+                 attendee.email && attendee.email.includes('@') && 
+                 !attendee.email.includes('noreply') && 
+                 !attendee.email.includes('calendar')
+               ))
       })
       
-      console.log(`[GOOGLE_CALENDAR] Found ${filteredEvents.length} events for ${doctorSpecialization}`)
+      console.log(`[GOOGLE_CALENDAR] Found ${filteredEvents.length} events for ${doctorSpecialization} after filtering`)
       
       return filteredEvents.map((event: any) => this.formatEventAsBooking(event))
     } catch (error) {
@@ -143,8 +195,9 @@ class GoogleCalendarAPI {
     try {
       const calendarId = process.env.GOOGLE_CALENDAR_ID
       const timeMin = new Date()
+      timeMin.setDate(timeMin.getDate() - 30) // Include past 30 days to show history
       const timeMax = new Date()
-      timeMax.setMonth(timeMax.getMonth() + 3) // Next 3 months
+      timeMax.setMonth(timeMax.getMonth() + 6) // Next 6 months
 
       const response = await this.calendar.events.list({
         calendarId,
@@ -152,16 +205,21 @@ class GoogleCalendarAPI {
         timeMax: timeMax.toISOString(),
         singleEvents: true,
         orderBy: 'startTime',
-        q: patientEmail, // Search for events with patient email
+        maxResults: 250, // Get more events to ensure we catch all appointments
       })
 
       const events = response.data.items || []
+      console.log(`[GOOGLE_CALENDAR] Found ${events.length} total events for patient search`)
       
-      return events
-        .filter((event: any) => 
-          event.attendees?.some((attendee: any) => attendee.email === patientEmail)
-        )
-        .map((event: any) => this.formatEventAsBooking(event))
+      // Show ALL calendar events (no filtering except for all-day events)
+      const filteredEvents = events.filter((event: any) => {
+        // Only skip all-day events without times (like holidays)
+        return event.start?.dateTime
+      })
+      
+      console.log(`[GOOGLE_CALENDAR] Found ${filteredEvents.length} events for patient ${patientEmail} after filtering`)
+      
+      return filteredEvents.map((event: any) => this.formatEventAsBooking(event))
     } catch (error) {
       console.error('[GOOGLE_CALENDAR] Error fetching patient bookings:', error)
       return this.getMockBookingsForPatient(patientEmail)
@@ -316,23 +374,49 @@ private formatEventAsBooking(event: any): BookingDetails {
     
     // Try multiple fallback strategies for patient name
     if (!patientName || patientName === 'Unknown Patient') {
-      // Extract from event summary
+      // Extract from event summary - handle different formats
       if (event.summary) {
-        const summaryMatch = event.summary.match(/Medical Consultation - (.+)$/);
-        patientName = summaryMatch?.[1];
+        // Format: "Medical Consultation - John Doe"
+        let summaryMatch = event.summary.match(/(?:Medical Consultation|Consultation|Appointment|Meeting) - (.+)$/i);
+        if (!summaryMatch) {
+          // Format: "John Doe - Consultation"
+          summaryMatch = event.summary.match(/^(.+) - (?:Consultation|Appointment|Meeting)/i);
+        }
+        if (!summaryMatch) {
+          // Format: "Appointment with John Doe"
+          summaryMatch = event.summary.match(/(?:Appointment|Meeting|Consultation) with (.+)$/i);
+        }
+        if (!summaryMatch) {
+          // Format: "John Doe Consultation"
+          summaryMatch = event.summary.match(/^(.+) (?:Consultation|Appointment|Meeting)$/i);
+        }
+        patientName = summaryMatch?.[1]?.trim();
       }
       
       // Extract from description
       if (!patientName && event.description) {
-        const descriptionMatch = event.description.match(/Patient: (.+)\n/);
-        patientName = descriptionMatch?.[1];
+        const descriptionMatch = event.description.match(/(?:Patient|Name):\s*(.+)(?:\n|$)/i);
+        patientName = descriptionMatch?.[1]?.trim();
       }
       
-      // Extract from email if still no name
+      // Extract from attendee's name if email looks like a personal email
       if (!patientName && patientAttendee?.email) {
         const emailParts = patientAttendee.email.split('@')[0];
-        patientName = emailParts.replace(/[._]/g, ' ')
-          .replace(/\b\w/g, (l: string) => l.toUpperCase());
+        // Only use email if it looks like a name (contains dots or underscores)
+        if (emailParts.includes('.') || emailParts.includes('_')) {
+          patientName = emailParts.replace(/[._]/g, ' ')
+            .replace(/\b\w/g, (l: string) => l.toUpperCase());
+        }
+      }
+      
+      // If still no name and event has attendees, use the first non-doctor attendee
+      if (!patientName && event.attendees && event.attendees.length > 0) {
+        const firstNonDoctorAttendee = event.attendees.find((a: any) => 
+          a.displayName && !a.email.includes('@luxehealth.ai')
+        );
+        if (firstNonDoctorAttendee?.displayName) {
+          patientName = firstNonDoctorAttendee.displayName;
+        }
       }
       
       // Final fallback
@@ -357,20 +441,80 @@ private formatEventAsBooking(event: any): BookingDetails {
       console.warn('Invalid date or time format detected');
     }
     
+    // Extract reason from multiple sources
+    let reason = '';
+    if (event.description) {
+      // Look for "Consultation for" or "Reason:" patterns
+      const reasonMatch = event.description.match(/(?:Consultation for|Reason for visit|Reason:|Purpose:)\s*(.+?)(?:\n|$)/i);
+      if (reasonMatch) {
+        reason = reasonMatch[1].trim();
+      } else {
+        // Use the first line of description if it doesn't contain email
+        const firstLine = event.description.split('\n')[0];
+        if (firstLine && !firstLine.includes('@') && !firstLine.toLowerCase().includes('patient:')) {
+          reason = firstLine.replace(/^(?:Consultation for|Appointment for|Meeting for)\s*/i, '').trim();
+        }
+      }
+    }
+    
+    // If no reason found, try to infer from the event summary
+    if (!reason && event.summary) {
+      if (event.summary.toLowerCase().includes('follow-up')) {
+        reason = 'Follow-up consultation';
+      } else if (event.summary.toLowerCase().includes('checkup')) {
+        reason = 'Routine checkup';
+      } else if (event.summary.toLowerCase().includes('consultation')) {
+        reason = 'Medical consultation';
+      } else {
+        reason = event.summary;
+      }
+    }
+    
+    // Final fallback for reason
+    if (!reason) {
+      reason = 'Medical consultation';
+    }
+    
+    // Determine doctor specialization from multiple sources
+    let doctorSpecialization = event.extendedProperties?.private?.doctorSpecialization || 'general';
+    
+    // Try to infer from doctor attendee email
+    if (doctorSpecialization === 'general' && doctorAttendee?.email) {
+      const specializations = ['heart', 'brain', 'lungs', 'liver'];
+      const foundSpec = specializations.find(spec => doctorAttendee.email.includes(spec));
+      if (foundSpec) {
+        doctorSpecialization = foundSpec;
+      }
+    }
+    
+    // Try to infer from event content
+    if (doctorSpecialization === 'general') {
+      const content = `${event.summary || ''} ${event.description || ''}`.toLowerCase();
+      if (content.includes('cardio') || content.includes('heart')) {
+        doctorSpecialization = 'heart';
+      } else if (content.includes('neuro') || content.includes('brain')) {
+        doctorSpecialization = 'brain';
+      } else if (content.includes('pulmo') || content.includes('lung')) {
+        doctorSpecialization = 'lungs';
+      } else if (content.includes('hepat') || content.includes('liver')) {
+        doctorSpecialization = 'liver';
+      }
+    }
+    
     return {
       id: event.id,
       patientEmail: patientAttendee?.email || 'unknown@email.com',
       patientName,
-      doctorSpecialization: event.extendedProperties?.private?.doctorSpecialization || 'general',
+      doctorSpecialization,
       date,
       time,
-      reason: event.description?.split('\n')[0]?.replace('Consultation for ', '') || 'Medical consultation',
+      reason,
       status: event.status || 'confirmed',
       doctorResponse: event.extendedProperties?.private?.doctorResponse || 
                      doctorAttendee?.responseStatus || 'needsAction',
       analysisId: event.extendedProperties?.private?.analysisId,
       remarks: event.extendedProperties?.private?.remarks,
-      meetingLink: event.hangoutLink || `https://meet.google.com/${event.id}`,
+      meetingLink: event.hangoutLink || event.conferenceData?.entryPoints?.[0]?.uri || `https://meet.google.com/${event.id}`,
       created: event.created || new Date().toISOString(),
       updated: event.updated || new Date().toISOString()
     }

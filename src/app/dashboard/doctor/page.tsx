@@ -14,7 +14,8 @@ import {
   Star,
   ClipboardList,
   MessageSquare,
-  Calendar
+  Calendar,
+  Trophy
 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -22,9 +23,10 @@ import DoctorHomePage from '@/components/doctor/DoctorHomePage'
 import DoctorCasesPage from '@/components/doctor/DoctorCasesPage'
 import DoctorBookingsPage from '@/components/doctor/DoctorBookingsPage'
 import DoctorReviewsPage from '@/components/doctor/DoctorReviewsPage'
+import DoctorLeaderboardPage from '@/components/doctor/DoctorLeaderboardPage'
 import toast from 'react-hot-toast'
 
-type TabType = 'home' | 'cases' | 'bookings' | 'reviews' | 'settings'
+type TabType = 'home' | 'cases' | 'bookings' | 'reviews' | 'leaderboard' | 'settings'
 
 interface DoctorSession {
   email: string
@@ -146,16 +148,24 @@ export default function DoctorDashboard() {
     return null // Will redirect to login
   }
 
+  const handleTabChange = (tab: string) => {
+    if (tab === 'home' || tab === 'cases' || tab === 'bookings' || tab === 'reviews' || tab === 'leaderboard' || tab === 'settings') {
+      setActiveTab(tab as TabType)
+    }
+  }
+
   const renderContent = () => {
     switch (activeTab) {
       case 'home':
         return <DoctorHomePage specialization={doctorSession.specialization} />
       case 'cases':
-        return <DoctorCasesPage specialization={doctorSession.specialization} onTabChange={setActiveTab} />
+        return <DoctorCasesPage specialization={doctorSession.specialization} onTabChange={handleTabChange} />
       case 'bookings':
         return <DoctorBookingsPage specialization={doctorSession.specialization} />
       case 'reviews':
         return <DoctorReviewsPage />
+      case 'leaderboard':
+        return <DoctorLeaderboardPage />
       case 'settings':
         return (
           <div className="space-y-6">
@@ -196,7 +206,7 @@ export default function DoctorDashboard() {
           </div>
         )
       default:
-        return <DoctorHomePage />
+        return <DoctorHomePage specialization={doctorSession.specialization} />
     }
   }
 
@@ -327,7 +337,21 @@ export default function DoctorDashboard() {
                 }`}
               >
                 <MessageSquare className="h-5 w-5 mr-3" />
-                Patient Reviews
+Patient Reviews
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab('leaderboard')
+                  setSidebarOpen(false)
+                }}
+                className={`w-full flex items-center px-4 py-3 text-left rounded-xl transition-all duration-200 ${
+                  activeTab === 'leaderboard'
+                    ? 'bg-blue-600 text-white font-medium shadow-lg'
+                    : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                }`}
+              >
+                <Trophy className="h-5 w-5 mr-3" />
+                Leaderboard
               </button>
               <button
                 onClick={() => {

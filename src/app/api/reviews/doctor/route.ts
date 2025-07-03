@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { connectToDatabase } from '@/lib/mongodb'
+import connectDB from '@/lib/mongodb'
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,7 +14,12 @@ export async function GET(request: NextRequest) {
       }, { status: 400 })
     }
 
-    const { db } = await connectToDatabase()
+    const mongoose = await connectDB()
+    const db = mongoose.connection.db
+
+    if (!db) {
+      throw new Error('Database connection failed')
+    }
 
     // Fetch reviews for the doctor
     const reviews = await db.collection('reviews')

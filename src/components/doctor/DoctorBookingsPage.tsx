@@ -11,8 +11,7 @@ import {
   Video,
   RefreshCw,
   MessageSquare,
-  Loader2,
-  Eye
+  Loader2
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -270,9 +269,6 @@ export default function DoctorBookingsPage({ specialization }: DoctorBookingsPag
                         </a>
                       )}
 
-                      <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
-                        <Eye className="w-4 h-4" />
-                      </button>
                     </div>
                   </div>
 
