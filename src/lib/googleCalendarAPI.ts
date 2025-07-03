@@ -428,9 +428,14 @@ private formatEventAsBooking(event: any): BookingDetails {
     let date = '';
     let time = '';
     try {
+      // Get the timezone from the event, fallback to Asia/Kolkata if not specified
+      const eventTimeZone = event.start?.timeZone || 'Asia/Kolkata';
       const startDate = new Date(event.start?.dateTime || '');
+      
       if (!isNaN(startDate.getTime())) {
         date = startDate.toISOString().split('T')[0];
+                
+        // Format time in the original timezone to preserve the intended time
         time = startDate.toLocaleTimeString('en-US', { 
           hour: 'numeric', 
           minute: '2-digit', 
